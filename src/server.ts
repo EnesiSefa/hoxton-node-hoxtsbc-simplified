@@ -21,7 +21,7 @@ app.post("/sign-up", async (req, res) => {
       where: { name: req.body.name },
     });
     if (existingUser) {
-      res.status(400).send({ error: "users already exists" });
+      res.status(400).send({ error: "user already exists" });
     } else {
       const user = await prisma.user.create({
         data: { name: req.body.name, pin: bcrypt.hashSync(req.body.pin) },
@@ -29,6 +29,7 @@ app.post("/sign-up", async (req, res) => {
       res.send(user);
     }
   } catch (error) {
+    //@ts-ignore
     res.status(400).send({ error: error.message });
   }
 });
@@ -38,10 +39,14 @@ app.get("/users", async (req, res) => {
 });
 
 app.post("/sign-in", async (req, res) => {
-  const user = await prisma.user.findUnique({ where: { name: req.body.name } });
-  if (user && bcrypt.compareSync(req.body.pin, user.pin)) {
-    res.send(user);
-  } else {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { name: req.body.name },
+    });
+    if (user && bcrypt.compareSync(req.body.pin, user.pin)) {
+      res.send(user);
+    }
+  } catch (error) {
     res.status(400).send({ error: "name/pin not correct" });
   }
 });
