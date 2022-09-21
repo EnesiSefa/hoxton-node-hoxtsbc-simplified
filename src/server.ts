@@ -11,15 +11,23 @@ app.use(cors());
 app.options("*", cors());
 app.use(express.json());
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({ log: ["error", "info", "query", "warn"] });
 
-const port = 4000;
+const port = 4005;
 
 app.post("/sign-up", async (req, res) => {
-  const user = await prisma.user.create({
-    data: { name: req.body.name, pin: bcrypt.hashSync(req.body.pin) },
-  });
-  res.send(user);
+  try {
+    const user = await prisma.user.create({
+      data: { name: req.body.name, pin: bcrypt.hashSync(req.body.pin) },
+    });
+    res.send(user);
+  } catch (error) {
+    res.status(400).send({ error: error.message });
+  }
+});
+app.get("/users", async (req, res) => {
+  const users = await prisma.user.findMany({ include: { transactions: true } });
+  res.send(users);
 });
 
 app.post("/sign-in", async (req, res) => {
@@ -30,10 +38,6 @@ app.post("/sign-in", async (req, res) => {
     res.status(400).send({ error: "name/pin not correct" });
   }
 });
-
-app.get("/validate", async (req, res) => {});
-
-app.get("/transactions", async (req, res) => {});
 
 app.listen(port, () => {
   console.log(`App running: http://localhost:${port}`);
