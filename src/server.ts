@@ -13,14 +13,21 @@ app.use(express.json());
 
 const prisma = new PrismaClient({ log: ["error", "info", "query", "warn"] });
 
-const port = 4005;
+const port = 4000;
 
 app.post("/sign-up", async (req, res) => {
   try {
-    const user = await prisma.user.create({
-      data: { name: req.body.name, pin: bcrypt.hashSync(req.body.pin) },
+    const existingUser = await prisma.user.findUnique({
+      where: { name: req.body.name },
     });
-    res.send(user);
+    if (existingUser) {
+      res.status(400).send({ error: "users already exists" });
+    } else {
+      const user = await prisma.user.create({
+        data: { name: req.body.name, pin: bcrypt.hashSync(req.body.pin) },
+      });
+      res.send(user);
+    }
   } catch (error) {
     res.status(400).send({ error: error.message });
   }
