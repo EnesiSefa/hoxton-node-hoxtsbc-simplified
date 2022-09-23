@@ -66,12 +66,36 @@ app.post("/sign-in", async (req, res) => {
   }
 });
 
+app.post("/add-transaction", async (req, res) => {
+  try {
+    const transaction = await prisma.transaction.create({
+      data: {
+        currency: req.body.currency,
+        amount: req.body.amount,
+        userId: req.body.userId,
+      },
+      
+    });
+
+    res.send(transaction);
+  } catch (error) {
+    //@ts-ignore
+    res.status(400).send({ error: error.message });
+  }
+});
+app.get("/transactions", async (req, res) => {
+  const transaction = await prisma.transaction.findMany({
+    include: { user: true },
+  });
+  res.send(transaction);
+});
+
 app.get("/validate", async (req, res) => {
   try {
     if (req.headers.authorization) {
       const user = await currentUser(req.headers.authorization);
       // @ts-ignore
-      res.send({ user: user, token: generateToken(user?.id) });// here we send a new token every time user signs in
+      res.send({ user: user, token: generateToken(user?.id) }); // here we send a new token every time user signs in
     }
   } catch (error) {
     // @ts-ignore
