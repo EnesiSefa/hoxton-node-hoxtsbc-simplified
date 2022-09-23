@@ -14,14 +14,14 @@ app.use(express.json());
 const prisma = new PrismaClient({ log: ["error", "info", "query", "warn"] });
 
 const port = 4000;
-const secret = "secret";
+const SECRET = process.env.SECRET!
 
 function generateToken(id: number) {
-  return jwt.sign({ id: id }, secret, { expiresIn: "2 days" });
+  return jwt.sign({ id: id }, SECRET, { expiresIn: "2 days" });
 }
 
 async function currentUser(token: string) {
-  const decodedData = jwt.verify(token, secret);
+  const decodedData = jwt.verify(token, SECRET);
 
   const user = await prisma.user.findUnique({
     //@ts-ignore
